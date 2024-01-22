@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Initiative Tracker</title>
+</head>
+<style>
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+</style>
+<body>
+
+<h1>D&D Initiative Tracker</h1>
+
+{% if warning_message %}
+<div class="warning-message">
+    {{ warning_message }}
+</div>
+{% endif %}
+
+<form action="/add_creature" method="post" onsubmit="return validateForm()">
+    <label for="name">Name:</label>
+    <input type="text" name="name" required>
+
+    <label for="initiative">Initiative:</label>
+    <input type="number" name="initiative" id="initiativeInput" min = -2 max = 60 required>
+
+    <label for="health">Health:</label>
+    <input type = "text" name ="health" required>
+
+    <label for="armorClass">AC:</label>
+    <input type = "text" name ="armorClass" required>
+
+    <label for= "is_player"> Player:</label>
+    <input type="checkbox" name="is_player">
+
+    <button type="submit">Add Creature/Player</button>
+</form>
+
+<table id="characterTable" style="width:100%">
+    <thead>
+        <tr>
+            <th>Initiative</th>
+            <th>Name</th>
+            <th>Health</th>
+            <th>AC</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for character in characters %}
+            <tr>
+                <td>{{ character.initiative }}</td>
+                <td>{{ character.name }}</td>
+                <td>{{ character.health }}</td>
+                <td>{{ character.armorClass }}</td>
+                <td>
+                    <form action="/remove_selected" method="post" style="display:inline;">
+                        <input type="hidden" name="selected_info" value="Initiative: {{ character.initiative }} - Name: {{ character.name }} - Health: {{ character.health }} - AC: {{ character.armorClass }} - Player: {% if character.is_player %}Yes{% else %}No{% endif %}">
+                        <button type="submit">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+<form action="/remove_all" method="post">
+    <button type="submit">Remove All</button>
+</form>
+
+<form action= "/remove_creatures" method = "post">
+    <button type="submit">Remove All Creatures</button>
+</form>
+
+<form action= "/remove_players" method = "post">
+    <button type="submit">Remove All players</button>
+</form>
+
+<script>
+    function validateForm() {
+        var initiativeInput = document.getElementById('initiativeInput');
+        var initiativeValue = initiativeInput.value.trim();
+
+        if (isNaN(initiativeValue)) {
+            alert('Initiative must be a valid number.');
+            initiativeInput.focus();
+            return false;
+        }
+
+        return true;
+    }
+</script>
+
+</body>
+</html>
