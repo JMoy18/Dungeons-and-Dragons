@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, jsonify, request, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
@@ -43,13 +43,33 @@ def add_creature():
 
     return redirect(url_for('index'))
 
+@app.route('/update_character', methods=['POST'])
+def update_character():
+    name = request.form.get('name')
+    property_name = request.form.get('property')
+    value = request.form.get('value')
+
+    for character in creatures + players:
+        if character.name == name:
+            setattr(character, property_name, value)
+
+    return jsonify({'success': True})
+
 @app.route('/remove_selected', methods=['POST'])
 def remove_selected():
     selected_info = request.form.get('selected_info')
 
-    # Example: Remove the item with the matching name, initiative, and player status
+    # Extract the character information from the selected_info
+    selected_info_parts = selected_info.split(' - ')
+    initiative = int(selected_info_parts[0].split(': ')[1])
+    name = selected_info_parts[1].split(': ')[1]
+    health = int(selected_info_parts[2].split(': ')[1])
+    armor_class = int(selected_info_parts[3].split(': ')[1])
+    is_player = selected_info_parts[4].split(': ')[1] == 'Yes'
+
+    # Remove the character
     for character in creatures + players:
-        if f"{character.name} - Initiative: {character.initiative} - Player: {character.is_player}" == selected_info:
+        if character.initiative == initiative and character.name == name and character.health == health and character.armorClass == armor_class and character.is_player == is_player:
             if character in creatures:
                 creatures.remove(character)
             elif character in players:

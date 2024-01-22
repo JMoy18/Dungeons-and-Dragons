@@ -6,9 +6,15 @@
     <title>D&D Initiative Tracker</title>
 </head>
 <style>
-    table, th, td {
-      border: 1px solid black;
-      border-collapse: collapse;
+    table {
+        border-collapse: collapse;
+    }   
+    
+    th:not(:last-child),
+    td:not(:last-child) {
+        border: 1px solid #000000;
+        text-align: left;
+        padding: 8px;
     }
 </style>
 <body>
@@ -22,32 +28,37 @@
 {% endif %}
 
 <form action="/add_creature" method="post" onsubmit="return validateForm()">
-    <label for="name">Name:</label>
+    <label for="name" placeholder = "Name of Creature">Name:</label>
     <input type="text" name="name" required>
 
     <label for="initiative">Initiative:</label>
     <input type="number" name="initiative" id="initiativeInput" min = -2 max = 60 required>
 
     <label for="health">Health:</label>
-    <input type = "text" name ="health" required>
+    <input type = "number" name ="health" min = 0 max = 500 required>
 
     <label for="armorClass">AC:</label>
-    <input type = "text" name ="armorClass" required>
+    <input type = "number" name ="armorClass" min = 0 max = 40 required>
 
     <label for= "is_player"> Player:</label>
     <input type="checkbox" name="is_player">
 
     <button type="submit">Add Creature/Player</button>
 </form>
+<p>
 
-<table id="characterTable" style="width:100%">
+
+</p>
+
+<!-- HTML code -->
+<table id="characterTable" style="width:90%">
     <thead>
         <tr>
-            <th>Initiative</th>
+            <th style="width:5%">Initiative</th>
             <th>Name</th>
             <th>Health</th>
             <th>AC</th>
-            <th>Action</th>
+            <th> </th>
         </tr>
     </thead>
     <tbody>
@@ -55,12 +66,14 @@
             <tr>
                 <td>{{ character.initiative }}</td>
                 <td>{{ character.name }}</td>
-                <td>{{ character.health }}</td>
-                <td>{{ character.armorClass }}</td>
+                <td contenteditable="true" data-property="health" onblur="updateCharacter('{{ character.name }}', 'health', this.innerText)">{{ character.health }}</td>
+                <td contenteditable="true" data-property="armorClass" onblur="updateCharacter('{{ character.name }}', 'armorClass', this.innerText)">{{ character.armorClass }}</td>
                 <td>
                     <form action="/remove_selected" method="post" style="display:inline;">
                         <input type="hidden" name="selected_info" value="Initiative: {{ character.initiative }} - Name: {{ character.name }} - Health: {{ character.health }} - AC: {{ character.armorClass }} - Player: {% if character.is_player %}Yes{% else %}No{% endif %}">
-                        <button type="submit">Remove</button>
+                        <button type="submit">
+                            <img src="https://freepngimg.com/thumb/trash_can/164880-basket-trash-png-free-photo.png" alt="buttonpng" width="20" height=auto />
+                        </button>
                     </form>
                 </td>
             </tr>
@@ -68,19 +81,69 @@
     </tbody>
 </table>
 
+<script>
+    function updateCharacter(name, property, value) {
+        $.ajax({
+            type: "POST",
+            url: "/update_character",
+            data: {
+                name: name,
+                property: property,
+                value: value
+            },
+            success: function(response) {
+                console.log(response);
+            },
+            error: function(error) {
+                console.log(error);
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            // Check if an editable cell has focus
+            var editableCell = document.querySelector('[contenteditable="true"]:focus');
+            if (editableCell) {
+                // Remove focus to exit edit mode
+                editableCell.blur();
+            }
+        }
+    });
+</script>
 
 
-<form action="/remove_all" method="post">
-    <button type="submit">Remove All</button>
+<script>
+    function updateCharacter(name, property, value) { }
+        // Send the updated data to the backend (you might need to send this data to the server using AJAX)
+        // Update the values in the backend based on the 'name' and 'property'
+</script>
+
+<p>
+
+
+</p>
+
+<!--This is used to make the buttons align and them to look halfway decent -->
+<style>
+    form {
+        display: inline-block;
+        margin-right: 10px; 
+    }
+</style>
+
+<form action="/remove_all" method="post">       
+    <button type="submit">Remove All</button>       
 </form>
-
+    
 <form action= "/remove_creatures" method = "post">
     <button type="submit">Remove All Creatures</button>
 </form>
-
+        
 <form action= "/remove_players" method = "post">
-    <button type="submit">Remove All players</button>
+    <button type="submit">Remove All Players</button>
 </form>
+
 
 <script>
     function validateForm() {
