@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    document.getElementById('removePlayersButton').addEventListener('click', function(e) {
+        e.preventDefault();
+        removePlayers();
+    });
+
     document.getElementById('creaturesTable').addEventListener('click', function(event) {
         if (event.target.classList.contains('delete')) {
             const row = event.target.closest('tr');
@@ -83,6 +88,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.querySelector('#creaturesTable tbody').innerHTML = tbody.innerHTML;
             });
     }
+
+    function removePlayers() {
+        fetch('/remove_players', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (! result.success) {
+                alert(result.message);
+            }
+        });
+        loadCreatures();
+    }
+    
 
     loadCreatures();
 });

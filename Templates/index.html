@@ -32,6 +32,7 @@
                 <th>Initiative</th>
                 <th>Health</th>
                 <th>Armor Class</th>
+                <th style="display:none;">is_player</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -43,6 +44,7 @@
                 <td>{{ creature.initiative }}</td>
                 <td contenteditable="true">{{ creature.health }}</td>
                 <td contenteditable="true">{{ creature.armorClass }}</td>
+                <td style="display:none;" >{{ creature.is_player}}</td>
                 <td>
                     <button class="delete" data-id="{{ creature.num }}">Delete</button>
                     <button class="update" data-id="{{ creature.num }}">Update</button>
@@ -61,7 +63,7 @@
     </form>
             
     <form action= "/remove_players" method = "post">
-        <button type="submit">Remove All Players</button>
+        <button type="submit" id="removePlayersButton">Remove All Players</button>
     </form>
 </body>
 </html>

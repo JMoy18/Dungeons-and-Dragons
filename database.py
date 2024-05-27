@@ -55,14 +55,12 @@ def remove_selected_item(id):
 
 def clear_creatures():
     with closing(conn.cursor()) as c:
-        c.execute('''SELECT * FROM creatures WHERE is_player = 0''')
-        c.execute('''DELETE FROM creatures''')
+        c.execute('DELETE FROM creatures WHERE is_player = 0')
         conn.commit()
 
 def clear_players():
     with closing(conn.cursor()) as c:
-        c.execute('''SELECT * FROM creatures WHERE is_player = 1''')
-        c.execute('''DELETE FROM creatures''')
+        c.execute('DELETE FROM creatures WHERE is_player = 1')
         conn.commit()
 
 def clear_table():
