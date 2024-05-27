@@ -1,115 +1,89 @@
-from flask import Flask, jsonify, request, render_template, request, redirect, url_for
-
+from flask import Flask, jsonify, request, jsonify, render_template, request, redirect, url_for
+import database
+from objects import Creature
 app = Flask(__name__)
-
-class Creature:
-    def __init__(self, name, initiative, health, armorClass, quantity = 1, is_player=False,):
-        self.name = name
-        self.initiative = initiative
-        self.is_player = is_player
-        self.health = health
-        self.quantity = quantity
-        self.armorClass = armorClass
-
-creatures = []
-players = []
+id_number = 1
 
 @app.route('/')
 def index():
-    #this sorts the creatures in 
-    all_characters = sorted(creatures + players, key=lambda x: int(x.initiative), reverse=True)
-    return render_template('index.html', characters=all_characters)
+    creatures = database.get_all_creatures()
+    return render_template('index.html', creatures=creatures)
 
 @app.route('/add_creature', methods=['POST'])
 def add_creature():
-    name = request.form.get('name')
-    initiative = request.form.get('initiative')
-    health = request.form.get('health')
-    armorClass = request.form.get("armorClass")
-    quantity = request.form.get("quantity")
-    is_player = request.form.get('is_player') == 'on'  # Checkbox value
+    global id_number
+    data = request.get_json()
+    name = data.get('name')
+    initiative = data.get('initiative')
+    health = data.get('health')
+    armorClass = data.get("armorClass")
+    quantity = data.get("quantity")
+    is_player = data.get('is_player')
+
+    if not quantity:
+        quantity = 1
 
     try:
         initiative = int(initiative)
         health = int(health)
         armorClass = int(armorClass)
+        quantity = int(quantity)
     except ValueError:
-        # Validation failed, render the template with a warning message
-        return render_template('index.html', characters=creatures + players, warning_message='Initiative/Health/AC must be a valid number')
-    
-    if quantity == '':
-        quantity = "1"
+        return jsonify({'success': False, 'message': 'Invalid input type'})
 
-    numCreatures = int(quantity)
-
-    while numCreatures != 0:
-        if is_player:
-            player = Creature(name, initiative, health, armorClass, is_player=True)
-            players.append(player)
-            numCreatures -= 1
-        else:
-            creature = Creature(name, initiative, health, armorClass)
-            creatures.append(creature)
-            numCreatures -= 1
-
-    return redirect(url_for('index'))
-
-@app.route('/update_character', methods=['POST'])
-def update_character():
-    name = request.form.get('name')
-    property_name = request.form.get('property')
-    value = request.form.get('value')
-
-    #something is broken here, in the case of multiple of the same name, we want to know which index it is at
-    for character in creatures + players:
-        if character.name == name:
-            setattr(character, property_name, value)
+    for _ in range(quantity):
+        creature = Creature(name = name, id = id_number, initiative = initiative, health = health, armorClass= armorClass, is_player=is_player)
+        id_number += 1
+        database.add_into_order(creature)
 
     return jsonify({'success': True})
 
-@app.route('/remove_selected', methods=['POST'])
+@app.route('/update_character', methods=['PUT'])
+def update_character():
+    data = request.get_json()
+    id = data.get('data-id')
+    name = data.get('name')
+    initiative = data.get('initiative')
+    health = data.get('health')
+    armorClass = data.get('armorClass')
+    is_player = data.get('is_player')
+
+    database.update_value(id, (name, initiative, health, armorClass, is_player))
+    return jsonify({'success': True})
+
+@app.route('/remove_selected', methods=['DELETE'])
 def remove_selected():
-    selected_info = request.form.get('selected_info')
-
-    # Extract the character information from the selected_info
-    selected_info_parts = selected_info.split(' - ')
-    initiative = int(selected_info_parts[0].split(': ')[1])
-    name = selected_info_parts[1].split(': ')[1]
-    health = int(selected_info_parts[2].split(': ')[1])
-    armor_class = int(selected_info_parts[3].split(': ')[1])
-    is_player = selected_info_parts[4].split(': ')[1] == 'Yes'
-
-    #something is breaking if all is similar but AC, it does delete an item but it reverts the change back to the original value
-    # Remove the character
-    for character in creatures + players:
-        if character.initiative == initiative and character.name == name and character.health == health and character.armorClass == armor_class and character.is_player == is_player:
-            if character in creatures:
-                creatures.remove(character)
-            elif character in players:
-                players.remove(character)
-
-            #we only want to delete one item (case where two creatures have the same amount of health left and name, AC)
-            break   
-
-    return redirect(url_for('index'))
+    data = request.get_json()
+    creature_id = data.get('id')
+    if creature_id is not None:
+        database.remove_selected_item(creature_id)
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'message': 'ID not provided'})
 
 
 @app.route('/remove_creatures', methods=['POST'])
 def remove_creatures():
-    creatures.clear()
+    database.clear_creatures()
     return redirect(url_for('index'))
 
 @app.route('/remove_players', methods=['POST'])
 def remove_players():
-    players.clear()
+    database.clear_players()
     return redirect(url_for('index'))
 
 @app.route('/remove_all', methods=['POST'])
 def remove_all():
-    creatures.clear()
-    players.clear()
+    database.clear_table()
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
+def main():
+    database.connect()
+    database.create_table()
     app.run(debug=True)
+
+
+if __name__ == '__main__':
+    main()
+
 
