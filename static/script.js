@@ -50,14 +50,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (event.target.classList.contains('update')) {
             const row = event.target.closest('tr');
-            const id = event.target.getAttribute('data-id');
-            const name = row.cells[1].innerText;
-            const initiative = row.cells[2].innerText;
+            const id = row.getAttribute('data-id');
             const health = row.cells[3].innerText;
             const armorClass = row.cells[4].innerText;
-            const is_player = row.cells[5].innerText.toLowerCase() === 'yes';
 
-            const jsonData = { id, name, initiative, health, armorClass, is_player };
+            const jsonData = { id, health, armorClass };
 
             fetch('/update_character', {
                 method: 'PUT',
@@ -68,12 +65,10 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    alert('Creature updated successfully!');
-                    loadCreatures();
-                } else {
+                if (! data.success) {
                     alert('Error updating creature.');
                 }
+                loadCreatures()
             });
         }
     });

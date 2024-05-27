@@ -41,14 +41,18 @@ def add_creature():
 @app.route('/update_character', methods=['PUT'])
 def update_character():
     data = request.get_json()
-    id = data.get('data-id')
-    name = data.get('name')
-    initiative = data.get('initiative')
+    id = data.get('id')
     health = data.get('health')
     armorClass = data.get('armorClass')
-    is_player = data.get('is_player')
+    
+    try:
+        health = int(health)
+        armorClass = int(armorClass)
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid input type'})
 
-    database.update_value(id, (name, initiative, health, armorClass, is_player))
+
+    database.update_value(id, health, armorClass)
     return jsonify({'success': True})
 
 @app.route('/remove_selected', methods=['DELETE'])

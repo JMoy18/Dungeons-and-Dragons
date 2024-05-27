@@ -43,10 +43,9 @@ def add_into_order(creature):
         conn.commit()
 
 
-def update_value(id, values):
+def update_value(id, health, ac):
     with closing(conn.cursor()) as c:
-        c.execute('UPDATE creatures SET name = ?, initiative = ?, health = ?, armorClass = ? WHERE id = ?', id,
-                  (values[0], values[1], values[2], values[3]))
+        c.execute('UPDATE creatures SET health = ?, armorClass = ? WHERE id = ?', (health, ac, id))
         conn.commit()
 
 def remove_selected_item(id):
